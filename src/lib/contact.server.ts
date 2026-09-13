@@ -35,14 +35,12 @@ export const ContactInput = z.object({
 async function verifyCaptcha(token: string, ip: string) {
   const secret = process.env["RECAPTCHA_SECRET_KEY"];
 
-  // If reCAPTCHA is not configured,
-  // allow the form to continue.
+  // If reCAPTCHA is not configured, allow submission.
   if (!secret) {
     return true;
   }
 
-  // If reCAPTCHA is configured but
-  // no token was received, reject.
+  // If reCAPTCHA is configured but no token is received.
   if (!token) {
     console.error("reCAPTCHA token is missing.");
     return false;
@@ -99,16 +97,12 @@ function looksLikeSpam(subject: string, message: string) {
     text.match(/https?:\/\/|www\.|\[url|\bbit\.ly\b/gi) ?? []
   ).length;
 
+  const spamWords =
+    /\b(viagra|casino|crypto giveaway|seo services|loan offer|forex signals)\b/i;
+
   return (
     links >= 3 ||
-    /\b(
-      viagra|
-      casino|
-      crypto giveaway|
-      seo services|
-      loan offer|
-      forex signals
-    )\b/ix.test(text) ||
+    spamWords.test(text) ||
     !/[a-z]/i.test(message)
   );
 }
@@ -213,7 +207,6 @@ export async function deliverContactMessage(
         subject: data.subject,
         message: data.message,
 
-        // FormSubmit configuration
         _subject: `Portfolio Contact: ${data.subject}`,
         _template: "table",
         _captcha: "false",
@@ -256,8 +249,6 @@ export async function deliverContactMessage(
       result?.success === true ||
       result?.success === "true";
 
-    /* ---------- FormSubmit Rejected ---------- */
-
     if (!response.ok || !accepted) {
       console.error(
         "FormSubmit rejected the contact message:",
@@ -271,14 +262,11 @@ export async function deliverContactMessage(
 
       return {
         ok: false as const,
-
         error:
           result?.message ||
           "Unable to send your message. Please try again.",
       };
     }
-
-    /* ---------- Success ---------- */
 
     console.log(
       "Contact message successfully sent through FormSubmit.",
